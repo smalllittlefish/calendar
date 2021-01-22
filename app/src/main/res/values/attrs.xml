@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CalendarSmartView">
+        <attr name="qw_orader">
+            <!--顺序-->
+            <enum name="normal" value="0" />
+            <!--倒序-->
+            <enum name="revise" value="1" />
+        </attr>
+    </declare-styleable>
+</resources>
