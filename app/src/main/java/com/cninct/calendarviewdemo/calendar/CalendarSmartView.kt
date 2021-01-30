@@ -16,13 +16,14 @@ import java.util.*
 import java.util.regex.Pattern
 
 class CalendarSmartView @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0,
-    defStyleRes: Int = 0
+        context: Context,
+        attrs: AttributeSet? = null,
+        defStyleAttr: Int = 0,
+        defStyleRes: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr, defStyleRes) {
     private var order = 0//日历时间顺序
     private var effect: Int = 0//效果，0只是显示，1单选，2范围选择
+    private var afterEnable: Boolean = false//是否选今天之后的数据
     private var rangeYear = 5//年-当年前后跨度,例：今年为2020年，则开始年为2015，结束年为2025
     private var fastIndex: SparseIntArray = SparseIntArray()//快速索引
 
@@ -48,11 +49,14 @@ class CalendarSmartView @JvmOverloads constructor(
      */
     fun scrollToDate(date: String? = null) {
         val def = SimpleDateFormat("yyyy年MM月", Locale.CHINA)
-        val dateStr = try {
-            def.parse(date ?: "")
-            date!!
-        } catch (e: Exception) {
-            def.format(Calendar.getInstance().time)
+        val d = date.dateStrToInt().toString()
+        val dateStr = when {
+            d.length >= 6 -> {
+                d.substring(0, 4) + "年" + d.substring(4, 6) + "月"
+            }
+            else -> {
+                def.format(Calendar.getInstance().time)
+            }
         }
         val index = getIndexByDate(dateStr)
         calListView.scrollToPosition(index)
@@ -94,7 +98,7 @@ class CalendarSmartView @JvmOverloads constructor(
                     if (1 == recyclerView.getChildViewHolder(childView).itemViewType) {
                         index = recyclerView.getChildAdapterPosition(childView)
                         showFirstMonthStr =
-                            mAdapter.data[index].monthStr
+                                mAdapter.data[index].monthStr
                         showFirstMonthTop = childView.top
                         break
                     }
@@ -189,7 +193,7 @@ class CalendarSmartView @JvmOverloads constructor(
      */
     private fun parseAttr(context: Context, attrs: AttributeSet?) {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.CalendarSmartView)
-        order = typedArray.getInteger(R.styleable.CalendarSmartView_qw_orader, 1)
+        order = typedArray.getInteger(R.styleable.CalendarSmartView_qw_orader, 0)
         typedArray.recycle()
     }
 
@@ -199,6 +203,9 @@ class CalendarSmartView @JvmOverloads constructor(
     private fun productData(): List<CalendarItem> {
         val data = mutableListOf<CalendarItem>()//数据
         val cal = Calendar.getInstance(Locale.CHINA)
+        val curY = cal.get(Calendar.YEAR)
+        val curM = cal.get(Calendar.MONTH)
+        val curD = cal.get(Calendar.DAY_OF_MONTH)
         val startYear = cal.get(Calendar.YEAR) - rangeYear
         val endYear = cal.get(Calendar.YEAR) + rangeYear
         var index = 0//索引
@@ -228,16 +235,20 @@ class CalendarSmartView @JvmOverloads constructor(
                 for (day in 1..monthCal.getActualMaximum(Calendar.DATE)) {
                     val dateStr = "${monthStr}-${String.format("%02d", day)}"
                     data.add(
-                        CalendarItem(
-                            monthStr = monthStr,
-                            dateStr = dateStr,
-                            dayStr = String.format("%02d", day),
-                            dateType = when ((week + day - 1) % 7) {
-                                1 -> 102
-                                0 -> 101
-                                else -> 0
-                            }
-                        )
+                            CalendarItem(
+                                    monthStr = monthStr,
+                                    dateStr = dateStr,
+                                    dayStr = String.format("%02d", day),
+                                    dateType = if (year > curY || (year == curY && month > curM) || (year == curY && month == curM && day > curD)) {
+                                        -1
+                                    } else {
+                                        when ((week + day - 1) % 7) {
+                                            1 -> 102
+                                            0 -> 101
+                                            else -> 0
+                                        }
+                                    }
+                            )
                     )
                     fastIndex.put(dateStr.dateStrToInt(), index)
                     index++

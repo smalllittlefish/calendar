@@ -23,13 +23,13 @@ class CalendarAdapter : RecyclerView.Adapter<ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return if (viewType == 1) {
             VHMonth(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.qw_calendar_item_month_layout, parent, false)
+                    LayoutInflater.from(parent.context)
+                            .inflate(R.layout.qw_calendar_item_month_layout, parent, false)
             )
         } else {
             VHDay(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.qw_calendar_item_day_layout, parent, false)
+                    LayoutInflater.from(parent.context)
+                            .inflate(R.layout.qw_calendar_item_day_layout, parent, false)
             )
         }
     }
@@ -42,7 +42,11 @@ class CalendarAdapter : RecyclerView.Adapter<ViewHolder>() {
             helper.tvDay.text = data[position].dayStr
             helper.squareView.setBackGround(data[position].itemType)
             helper.tvDay.setTextColor(
-                if (data[position].dateType == 0) Color.BLACK else Color.DKGRAY
+                    when (data[position].dateType) {
+                        -1 -> Color.LTGRAY
+                        101, 102 -> Color.GRAY
+                        else -> Color.BLACK
+                    }
             )
             if (data[position].dateType >= 0) {
                 onClick?.apply {

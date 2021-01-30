@@ -14,6 +14,7 @@ class CalendarItem(
      * 101，周六
      * 102，周日
      * -1000，月份
+     * -1不可点击
      */
     val dateType: Int = 0,
     /**
